@@ -9,7 +9,6 @@ import ReactECharts from 'echarts-for-react';
  * 添加图表页面
  * @constructor
  */
-// 把多余的状态删掉，页面名称改为AddChart
 const AddChart: React.FC = () => {
   // 定义状态，用来接收后端的返回值，让它实时展示在页面上
   const [chart, setChart] = useState<API.AiVO>();
