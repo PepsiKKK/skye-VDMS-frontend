@@ -1,5 +1,5 @@
 import { listMyChartVoByPageUsingPost } from '@/services/skye_VDMS_api/chartController';
-import {Avatar, Card, List, message} from 'antd';
+import {Avatar, Card, List, message, Result} from 'antd';
 import React, { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import {useModel} from "@umijs/max";
@@ -15,6 +15,10 @@ const MyChartPage: React.FC = () => {
     current: 1,
     // 每页数据量
     pageSize: 4,
+    // 设置按照创建时间排序
+    sortField: 'createTime',
+    // 进行继续排序
+    sortOrder: 'desc',
   };
 
   const [searchParams, setSearchParams] = useState<API.ChartQueryRequest>({ ...initSearchParams });
@@ -127,11 +131,51 @@ const MyChartPage: React.FC = () => {
                 title={item.name}
                 description={item.chartType ? '图表类型：' + item.chartType : undefined}
               />
-              <div style={{marginBottom: 16}}/>
-              <p>{'分析目标：' + item.goal}</p>
-              <div style={{marginBottom: 16}}/>
-              <ReactECharts option={JSON.parse(item.genChart ?? '{}')}/>
 
+              <>
+              {
+                // 当状态（item.status）为'wait'时，显示待生成的结果组件
+                item.status === 'wait' && <>
+                  <Result
+                    // 状态为警告
+                    status="warning"
+                    title="待生成"
+                    // 子标题显示执行消息，如果执行消息为空，则显示'当前图表生成队列繁忙，请耐心等候'
+                    subTitle={item.execMessage ?? '当前图表生成队列繁忙，请耐心等候'}
+                  />
+                </>
+              }
+              {
+                item.status === 'running' && <>
+                  <Result
+                    // 状态为信息
+                    status="info"
+                    title="图表生成中"
+                    // 子标题显示执行消息
+                    subTitle={item.execMessage}
+                  />
+                </>
+              }
+              {
+                // 当状态（item.status）为'succeed'时，显示生成的图表
+                item.status === 'succeed' && <>
+                <div style={{marginBottom: 16}}/>
+                <p>{'分析目标：' + item.goal}</p>
+                <div style={{marginBottom: 16}}/>
+                <ReactECharts option={JSON.parse(item.genChart ?? '{}')}/>
+                </>
+              }
+              {
+                // 当状态（item.status）为'failed'时，显示生成失败的结果组件
+                item.status === 'failed' && <>
+                  <Result
+                    status="error"
+                    title="图表生成失败"
+                    subTitle={item.execMessage}
+                  />
+                </>
+              }
+              </>
             </Card>
           </List.Item>
         )}
